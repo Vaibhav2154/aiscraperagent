@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - APOLLO_API_KEY=${APOLLO_API_KEY}
+      - MAX_CONCURRENT_AGENTS=5
+      - DATABASE_URL=sqlite:///./leads.db
+    volumes:
+      - ./server:/app
+      - backend_data:/app/chroma_db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  backend_data:
+
+networks:
+  app-network:
+    driver: bridge
